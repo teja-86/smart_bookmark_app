@@ -216,36 +216,37 @@
       key={bookmark.id}
       className="flex justify-between items-center bg-white/10 border border-white/20 p-4 mb-3 rounded-xl hover:bg-white/20 transition"
     >
-      {editingId === bookmark.id ? (
-  <div className="flex w-full gap-3 items-center">
-    <input
-      value={editTitle}
-      onChange={(e) => setEditTitle(e.target.value)}
-      className="bg-white/20 border border-white/30 p-2 rounded-lg flex-1 text-white"
-    />
-    <input
-      value={editUrl}
-      onChange={(e) => setEditUrl(e.target.value)}
-      className="bg-white/20 border border-white/30 p-2 rounded-lg flex-1 text-white"
-    />
+  {editingId === bookmark.id ? (
+  <div className="flex flex-col w-full gap-3">
+    <div className="flex gap-3 w-full">
+      <input
+        value={editTitle}
+        onChange={(e) => setEditTitle(e.target.value)}
+        className="bg-white/20 border border-white/30 p-2 rounded-lg flex-1 text-white"
+      />
+      <input
+        value={editUrl}
+        onChange={(e) => setEditUrl(e.target.value)}
+        className="bg-white/20 border border-white/30 p-2 rounded-lg flex-1 text-white"
+      />
+    </div>
 
-    <div className="flex gap-3">
+    <div className="flex gap-3 justify-end">
       <button
         onClick={() => updateBookmark(bookmark.id)}
-        className="px-3 py-1 bg-green-500 hover:bg-green-400 rounded-lg text-sm"
+        className="px-4 py-2 bg-green-500 hover:bg-green-400 rounded-lg text-sm font-medium"
       >
         Save
       </button>
       <button
         onClick={() => setEditingId(null)}
-        className="px-3 py-1 bg-gray-500 hover:bg-gray-400 rounded-lg text-sm"
+        className="px-4 py-2 bg-gray-500 hover:bg-gray-400 rounded-lg text-sm font-medium"
       >
         Cancel
       </button>
     </div>
   </div>
 ) : (
-
         <>
           <a
             href={bookmark.url}

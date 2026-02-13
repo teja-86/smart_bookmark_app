@@ -9,6 +9,11 @@ export default function Home() {
   const [url, setUrl] = useState("");
   const [bookmarks, setBookmarks] = useState<any[]>([]);
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editUrl, setEditUrl] = useState("");
+
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
@@ -50,23 +55,75 @@ export default function Home() {
   };
 
   const addBookmark = async () => {
-    if (!title || !url) return;
+  if (!title || !url) return;
 
-    await supabase.from("bookmarks").insert([
+  const { data, error } = await supabase
+    .from("bookmarks")
+    .insert([
       {
         title,
         url,
         user_id: session.user.id,
       },
-    ]);
+    ])
+    .select();
 
-    setTitle("");
-    setUrl("");
-  };
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  setBookmarks((prev) => [...(data || []), ...prev]);
+
+  setTitle("");
+  setUrl("");
+};
+
 
   const deleteBookmark = async (id: string) => {
-    await supabase.from("bookmarks").delete().eq("id", id);
-  };
+  const { error } = await supabase
+    .from("bookmarks")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  setBookmarks((prev) => prev.filter((bookmark) => bookmark.id !== id));
+};
+
+const updateBookmark = async (id: string) => {
+  if (!editTitle || !editUrl) return;
+
+  const { data, error } = await supabase
+    .from("bookmarks")
+    .update({
+      title: editTitle,
+      url: editUrl,
+    })
+    .eq("id", id)
+    .select();
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  // 🔥 Update state instantly
+  setBookmarks((prev) =>
+    prev.map((bookmark) =>
+      bookmark.id === id ? { ...bookmark, ...data?.[0] } : bookmark
+    )
+  );
+
+  setEditingId(null);
+  setEditTitle("");
+  setEditUrl("");
+};
+
+
 
   if (!session) {
     return (
@@ -155,25 +212,69 @@ export default function Home() {
       </div>
 
       {bookmarks.map((bookmark) => (
-        <div
-          key={bookmark.id}
-          className="flex justify-between items-center bg-white/10 border border-white/20 p-4 mb-3 rounded-xl hover:bg-white/20 transition"
+  <div
+    key={bookmark.id}
+    className="flex justify-between items-center bg-white/10 border border-white/20 p-4 mb-3 rounded-xl hover:bg-white/20 transition"
+  >
+    {editingId === bookmark.id ? (
+      <div className="flex flex-1 gap-2">
+        <input
+          value={editTitle}
+          onChange={(e) => setEditTitle(e.target.value)}
+          className="bg-white/20 border border-white/30 p-2 rounded-lg flex-1 text-white"
+        />
+        <input
+          value={editUrl}
+          onChange={(e) => setEditUrl(e.target.value)}
+          className="bg-white/20 border border-white/30 p-2 rounded-lg flex-1 text-white"
+        />
+        <button
+          onClick={() => updateBookmark(bookmark.id)}
+          className="text-green-400"
         >
-          <a
-            href={bookmark.url}
-            target="_blank"
-            className="text-indigo-300 hover:underline"
+          Save
+        </button>
+        <button
+          onClick={() => setEditingId(null)}
+          className="text-gray-400"
+        >
+          Cancel
+        </button>
+      </div>
+    ) : (
+      <>
+        <a
+          href={bookmark.url}
+          target="_blank"
+          className="text-indigo-300 hover:underline flex-1"
+        >
+          {bookmark.title}
+        </a>
+
+        <div className="flex gap-4">
+          <button
+            onClick={() => {
+              setEditingId(bookmark.id);
+              setEditTitle(bookmark.title);
+              setEditUrl(bookmark.url);
+            }}
+            className="text-yellow-400 hover:text-yellow-300"
           >
-            {bookmark.title}
-          </a>
+            Edit
+          </button>
+
           <button
             onClick={() => deleteBookmark(bookmark.id)}
-            className="text-red-400 hover:text-red-300 transition"
+            className="text-red-400 hover:text-red-300"
           >
             Delete
           </button>
         </div>
-      ))}
+      </>
+    )}
+  </div>
+))}
+
 
     </div>
   </div>
